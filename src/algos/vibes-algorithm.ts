@@ -13,7 +13,7 @@ const SECRETS_PATH = "../secrets.json";
 const REQUEST_METRIC = "bluesky.feed.request";
 const REFRESH_METRIC = "bluesky.feed.refresh";
 
-const settings = require(SETTINGS_PATH);
+const settings = require(SETTINGS_PATH).vibesAlgo;
 const secrets = require(SECRETS_PATH);
 
 const pinnedPosts = settings.pinnedPosts;

@@ -131,3 +131,4 @@ dist
 src/secrets.json
 *.sqlite
 src/settings.json
+.DS_Store
