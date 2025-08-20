@@ -201,7 +201,7 @@ class VibesEventHandler implements EventHandler {
     this.keywords = this.settings.vibesAlgo.keywords.map((keyword: string) =>
       keyword.toLowerCase(),
     )
-    this.partialKeywords = this.settings.partialKeywords.map(
+    this.partialKeywords = this.settings.vibesAlgo.partialKeywords.map(
       (keyword: string) => keyword.toLowerCase(),
     )
     this.negativeKeywords = [
