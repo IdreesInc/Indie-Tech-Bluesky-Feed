@@ -165,7 +165,13 @@ async function deleteStalePosts(ctx: AppContext) {
   let builder = ctx.db
     .deleteFrom('post')
     .where('first_indexed', '<', currentTime - ONE_DAY)
-    .where('score', '<', 0.1)
+    .where('score', '<', 0.5)
+  await builder.execute();
+  // Delete all posts in the db older than 7 days
+  const SEVEN_DAYS = 1000 * 60 * 60 * 24 * 7;
+  builder = ctx.db
+    .deleteFrom('post')
+    .where('first_indexed', '<', currentTime - SEVEN_DAYS);
   await builder.execute();
 }
 

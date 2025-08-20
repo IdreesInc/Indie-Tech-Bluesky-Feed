@@ -117,13 +117,12 @@ class VibesEventHandler implements EventHandler {
     if (Date.now() - this.totalCountMetricLastUpdated > 60000) {
       this.totalCountMetricLastUpdated = Date.now()
       if (this.settings.publishMetrics !== false) {
-        // TODO: Uncomment
-        // incrementMetric(
-        //   this.secrets,
-        //   TOTAL_POSTS_METRIC,
-        //   this.totalPostsCounter,
-        //   60000,
-        // )
+        incrementMetric(
+          this.secrets,
+          TOTAL_POSTS_METRIC,
+          this.totalPostsCounter,
+          60000,
+        )
       }
       this.totalPostsCounter = 0
     }
