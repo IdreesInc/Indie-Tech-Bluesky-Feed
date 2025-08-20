@@ -137,7 +137,7 @@ class VibesEventHandler implements EventHandler {
         let match = !create.record.reply &&
           (!create.record.langs || create.record.langs?.includes('en'))
         const numberOfHashtags = (create.record.text.match(/#/g) || []).length
-        match = match && numberOfHashtags <= 6
+        match = match && numberOfHashtags <= 8
         let matchedKeyword: String | null = null
         if (match) {
           matchedKeyword = getMatch(

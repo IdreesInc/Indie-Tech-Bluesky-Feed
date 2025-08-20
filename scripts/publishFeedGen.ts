@@ -12,7 +12,7 @@ const vibesAlgoSettings = {
 
 const rickRollSettings = {
   recordName: 'nggyunglyd',
-  displayName: 'Feed of Loyalty',
+  displayName: 'NGGYUNGLYD',
   description: "You know the rules, and so do I.",
   avatar: './avatar.png'
 }
