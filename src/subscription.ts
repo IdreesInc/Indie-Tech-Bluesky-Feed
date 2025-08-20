@@ -333,7 +333,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
   rickRollEventHandler = new RickRollEventHandler(this.db)
 
   async handleEvent(evt: RepoEvent) {
-    // await this.vibesEventHandler.handle(evt)
+    await this.vibesEventHandler.handle(evt)
     await this.rickRollEventHandler.handle(evt)
   }
 }
