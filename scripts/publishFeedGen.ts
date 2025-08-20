@@ -3,7 +3,21 @@ import { AtpAgent, BlobRef } from '@atproto/api'
 import fs from 'fs/promises'
 import { ids } from '../src/lexicon/lexicons'
 
-const run = async () => {
+const vibesAlgoSettings = {
+  recordName: 'tech-vibes',
+  displayName: 'Indie Dev',
+  description: "A feed focusing on people's personal projects including open source software 💽, game dev 🕹️, hardware hacking ⚡️, and more!\nLike and pin this feed to join a community of indie tech creators and to see more cool projects across Bluesky!",
+  avatar: './avatar.png'
+}
+
+const rickRollSettings = {
+  recordName: 'nggyunglyd',
+  displayName: 'Feed of Loyalty',
+  description: "You know the rules, and so do I.",
+  avatar: './avatar.png'
+}
+
+const run = async (settings: typeof vibesAlgoSettings | typeof rickRollSettings) => {
   dotenv.config()
 
   // YOUR bluesky handle
@@ -18,19 +32,19 @@ const run = async () => {
   // A short name for the record that will show in urls
   // Lowercase with no spaces.
   // Ex: whats-hot
-  const recordName = 'tech-vibes'
+  const recordName = settings.recordName
 
   // A display name for your feed
   // Ex: What's Hot
-  const displayName = 'Indie Tech Vibes'
+  const displayName = settings.displayName
 
   // (Optional) A description of your feed
   // Ex: Top trending content from the whole network
-  const description = "A feed focusing on people's personal projects including open source software 💽, game dev 🕹️, hardware hacking ⚡️, and more!\nLike and pin this feed to join a community of indie tech creators and to see more cool projects across Bluesky!"
+  const description = settings.description
 
   // (Optional) The path to an image to be used as your feed's avatar
   // Ex: ~/path/to/avatar.jpeg
-  const avatar: string = './avatar.png'
+  const avatar: string = settings.avatar
 
   // -------------------------------------
   // NO NEED TO TOUCH ANYTHING BELOW HERE
@@ -80,4 +94,5 @@ const run = async () => {
   console.log('All done 🎉')
 }
 
-run()
+run(vibesAlgoSettings)
+run(rickRollSettings)
