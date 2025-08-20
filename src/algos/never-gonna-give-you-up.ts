@@ -129,13 +129,13 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
 }
 
 async function deleteStalePosts(ctx: AppContext) {
-  // Delete all posts in the db older than 1 day with a score less than 0.1
+  // Delete all posts in the db older than 3 days with a score less than 0.1
   log.red('Deleting stale posts...')
   const currentTime = Date.now()
-  const ONE_DAY = 1000 * 60 * 60 * 24 * 1
+  const THREE_DAYS = 1000 * 60 * 60 * 24 * 3
   let builder = ctx.db
     .deleteFrom('rick_roll_post')
-    .where('first_indexed', '<', currentTime - ONE_DAY)
+    .where('first_indexed', '<', currentTime - THREE_DAYS)
     .where('score', '<', 0.1)
   await builder.execute()
   // Delete all posts in the db older than 7 days
