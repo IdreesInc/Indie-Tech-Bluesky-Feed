@@ -74,10 +74,13 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
       })
     if (post == null) {
       console.error('Failed to get post, error code: ' + errorStatus)
-      // let builder = ctx.db
-      //   .deleteFrom('rick_roll_post')
-      //   .where('uri', '=', row.uri)
-      // await builder.execute()
+      if (errorStatus === 400 || errorStatus == 410) {
+        console.error("Deleting missing post: " + row.uri)
+        let builder = ctx.db
+          .deleteFrom('rick_roll_post')
+          .where('uri', '=', row.uri)
+        await builder.execute()
+      }
       continue
     }
     const likeCount = ((<any>post.data.thread.post)?.likeCount as number) ?? 0

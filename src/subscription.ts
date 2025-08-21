@@ -250,6 +250,10 @@ class RickRollEventHandler implements EventHandler {
     const postsToDelete = ops.posts.deletes.map((del) => del.uri)
     const postsToCreate = ops.posts.creates
       .filter((create) => {
+        if (create.record.embed?.record) {
+          // Ignore quote posts
+          return false
+        }
         let match =
           !create.record.reply &&
           (!create.record.langs || create.record.langs?.includes('en'))
