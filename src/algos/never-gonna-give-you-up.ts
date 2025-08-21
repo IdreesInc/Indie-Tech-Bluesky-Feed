@@ -41,6 +41,7 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
     [12 * HOUR, 2 * HOUR], // Refresh posts < 12 hours old every 2 hours
     [24 * HOUR, 4 * HOUR], // Refresh posts < 24 hours old every 4 hours
     [48 * HOUR, 8 * HOUR], // Refresh posts < 48 hours old every 8 hours
+    [10000 * HOUR, 24 * HOUR], // Refresh posts < 10000 hours old every 24 hours
   ]
   const currentTime = Date.now()
 
@@ -72,8 +73,11 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
         return null
       })
     if (post == null) {
-      // console.error("Failed to get post, deleting: " + row.uri);
-      // await deletePost(ctx, row.uri);
+      console.error('Failed to get post, error code: ' + errorStatus)
+      // let builder = ctx.db
+      //   .deleteFrom('rick_roll_post')
+      //   .where('uri', '=', row.uri)
+      // await builder.execute()
       continue
     }
     const likeCount = ((<any>post.data.thread.post)?.likeCount as number) ?? 0
