@@ -225,6 +225,16 @@ export const handler = async (
   // Trigger a refresh asynchronously
   refreshScores(ctx, agent)
 
+  const feedLimit = 25
+  let startingIndex = 0
+  if (params.cursor && params.cursor.length > 0) {
+    try {
+      startingIndex = parseInt(params.cursor || '0')
+    } catch (error) {
+      console.error('Error parsing cursor:', error)
+    }
+  }
+
   const postsForWords: Record<string, any[]> = {}
 
   for (let word of Object.keys(wordsToCount)) {
@@ -261,12 +271,15 @@ export const handler = async (
     })
   }
 
-  let cursor: string | undefined
+  // Slice the feed to the desired limit
+  const slicedFeed = feed.slice(startingIndex, startingIndex + feedLimit)
 
-  console.log('Responding to request with ' + feed.length + ' posts')
+  const cursor = startingIndex + slicedFeed.length + "";
+
+  console.log('Responding to request with ' + slicedFeed.length + ' posts and cursor ' + cursor);
 
   return {
     cursor,
-    feed,
+    feed: slicedFeed,
   }
 }
