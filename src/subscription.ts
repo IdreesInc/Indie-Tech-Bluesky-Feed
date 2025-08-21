@@ -236,6 +236,18 @@ class RickRollEventHandler implements EventHandler {
       .split(' ')[0]
       .replaceAll(`"`, '')
       .replaceAll(`'`, '')
+      .replaceAll(`“`, '')
+      .replaceAll(`”`, '')
+      .replaceAll(`(`, '')
+      .replaceAll(`)`, '')
+      .replaceAll(`,`, '')
+      .replaceAll(`.`, '')
+      .replaceAll(`!`, '')
+      .replaceAll(`?`, '')
+      .replaceAll(`:`, '')
+      .replaceAll(`-`, '')
+      .replaceAll(`*`, '')
+      .replaceAll(`~`, '')
       .toLowerCase()
   }
 
@@ -337,7 +349,7 @@ export class FirehoseSubscription extends FirehoseSubscriptionBase {
   rickRollEventHandler = new RickRollEventHandler(this.db)
 
   async handleEvent(evt: RepoEvent) {
-    await this.vibesEventHandler.handle(evt)
+    // await this.vibesEventHandler.handle(evt)
     await this.rickRollEventHandler.handle(evt)
   }
 }

@@ -14,7 +14,7 @@ const rickRollSettings = {
   recordName: 'nggyunglyd',
   displayName: "NGLYD",
   description: "You know the rules, and so do I.",
-  avatar: './avatar.png'
+  avatar: './avatar-rick-roll.png'
 }
 
 const run = async (settings: typeof vibesAlgoSettings | typeof rickRollSettings) => {
