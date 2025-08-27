@@ -1,13 +1,14 @@
 import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
 import { BskyAgent } from '@atproto/api'
-import { log } from 'console-log-colors'
+import { log as colorLog } from 'console-log-colors'
 import axios from 'axios'
 
 // max 15 chars
 export const shortname = 'nggyunglyd'
 
 const SETTINGS_PATH = '../settings.json'
+const BANNED_LABELS = new Set(['!hide', '!warn', '!no-unauthenticated', 'porn', 'sexual', 'graphic-media', 'nudity']);
 
 const settings = require(SETTINGS_PATH).rickRoll
 
@@ -68,20 +69,33 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
         depth: 1,
       })
       .catch((err) => {
-        console.error(err)
+        error(err)
         errorStatus = err.status
         return null
       })
     if (post == null) {
-      console.error('Failed to get post, error code: ' + errorStatus)
+      error('Failed to get post, error code: ' + errorStatus)
       if (errorStatus === 400 || errorStatus == 410) {
-        console.error("Deleting missing post: " + row.uri)
+        error("Deleting missing post: " + row.uri)
         let builder = ctx.db
           .deleteFrom('rick_roll_post')
           .where('uri', '=', row.uri)
         await builder.execute()
       }
       continue
+    }
+    // Check if post contains adult content
+    const labels = (<any> post.data.thread.post)?.labels;
+    if (labels && Array.isArray(labels) && labels.length > 0) {
+      const labelValues: string[] = labels.map((label: any) => label.val);
+      if (labelValues.some((label) => BANNED_LABELS.has(label))) {
+        log("Post contains banned labels, deleting: " + labelValues);
+        let builder = ctx.db
+          .deleteFrom('rick_roll_post')
+          .where('uri', '=', row.uri)
+        await builder.execute()
+        continue
+      }
     }
     const likeCount = ((<any>post.data.thread.post)?.likeCount as number) ?? 0
     const repostCount =
@@ -91,7 +105,7 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
       (currentTime - indexedTime) / 1000 / 60 / 60,
       likeCount + repostCount + row.mod,
     )
-    // console.log("Updating score for post: " + row.uri + " to " + score);
+    // log("Updating score for post: " + row.uri + " to " + score);
     await ctx.db
       .insertInto('rick_roll_post')
       .values({
@@ -112,7 +126,7 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
       .execute()
   }
   if (res.length > 0) {
-    console.log(
+    log(
       'Updated ' +
         res.length +
         ' score(s) at: ' +
@@ -123,7 +137,7 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
         }),
     )
   } else {
-    console.log(
+    log(
       'No scores to update at: ' +
         new Date().toLocaleString('en-US', {
           hour: 'numeric',
@@ -137,19 +151,19 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
 
 async function deleteStalePosts(ctx: AppContext) {
   // Delete all posts in the db older than 3 days with a score less than 0.1
-  log.red('Deleting stale posts...')
+  log('Deleting stale posts...')
   const currentTime = Date.now()
-  const THREE_DAYS = 1000 * 60 * 60 * 24 * 3
+  // const THREE_DAYS = 1000 * 60 * 60 * 24 * 3
+  // let builder = ctx.db
+  //   .deleteFrom('rick_roll_post')
+  //   .where('first_indexed', '<', currentTime - THREE_DAYS)
+  //   .where('score', '<', 0.1)
+  // await builder.execute()
+  // Delete all posts in the db older than 14 days
+  const FOURTEEN_DAYS = 1000 * 60 * 60 * 24 * 14
   let builder = ctx.db
     .deleteFrom('rick_roll_post')
-    .where('first_indexed', '<', currentTime - THREE_DAYS)
-    .where('score', '<', 0.1)
-  await builder.execute()
-  // Delete all posts in the db older than 7 days
-  const SEVEN_DAYS = 1000 * 60 * 60 * 24 * 7
-  builder = ctx.db
-    .deleteFrom('rick_roll_post')
-    .where('first_indexed', '<', currentTime - SEVEN_DAYS)
+    .where('first_indexed', '<', currentTime - FOURTEEN_DAYS)
   await builder.execute()
 }
 
@@ -163,7 +177,7 @@ function uriToUrl(uri: string) {
 }
 
 async function logPosts(ctx: AppContext, agent: BskyAgent, limit: number) {
-  console.log('Logging posts for debugging...')
+  log('Logging posts for debugging...')
   let builder = ctx.db
     .selectFrom('rick_roll_post')
     .selectAll()
@@ -180,20 +194,28 @@ async function logPosts(ctx: AppContext, agent: BskyAgent, limit: number) {
         depth: 1,
       })
       .catch((err) => {
-        console.error(err)
+        error(err)
         return null
       })
     const data = <any>post?.data.thread.post
     const author = data?.author.displayName
     const text = data?.record.text
     const likes = data?.likeCount
-    console.log('--------------------------------------------------------')
-    log.green('Author: ' + author)
-    log.yellow('Text: ' + text)
-    log.red('Likes: ' + likes)
-    log.magenta('Score: ' + row.score)
-    log.cyan(uriToUrl(row.uri))
+    log('--------------------------------------------------------')
+    colorLog.green('Author: ' + author)
+    colorLog.yellow('Text: ' + text)
+    colorLog.red('Likes: ' + likes)
+    colorLog.magenta('Score: ' + row.score)
+    colorLog.cyan(uriToUrl(row.uri))
   }
+}
+
+function log(msg: string) {
+  console.log(`[Rick Roll] ${msg}`);
+}
+
+function error(msg: string) {
+  console.error(`[Rick Roll] ${msg}`);
 }
 
 export const handler = async (
@@ -202,7 +224,7 @@ export const handler = async (
   agent: BskyAgent,
 ) => {
   if (!intervalsScheduled) {
-    log.yellow('Scheduling intervals...')
+    colorLog.yellow('Scheduling intervals...')
     // Schedule a refresh of scores every 15 minutes
     setInterval(() => {
       refreshScores(ctx, agent)
@@ -231,7 +253,7 @@ export const handler = async (
     try {
       startingIndex = parseInt(params.cursor || '0')
     } catch (error) {
-      console.error('Error parsing cursor:', error)
+      error('Error parsing cursor:', error)
     }
   }
 
@@ -260,7 +282,7 @@ export const handler = async (
       feed.push(posts[0])
       posts.shift()
     } else {
-      console.error('No posts found for word: ' + word)
+      error('No posts found for word: ' + word)
     }
   }
 
@@ -276,7 +298,7 @@ export const handler = async (
 
   const cursor = startingIndex + slicedFeed.length + "";
 
-  console.log('Responding to request with ' + slicedFeed.length + ' posts and cursor ' + cursor);
+  log('Responding to request with ' + slicedFeed.length + ' posts and cursor ' + cursor);
 
   return {
     cursor,

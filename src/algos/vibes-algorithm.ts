@@ -1,7 +1,7 @@
 import { QueryParams } from '../lexicon/types/app/bsky/feed/getFeedSkeleton'
 import { AppContext } from '../config'
 import { BskyAgent } from '@atproto/api';
-import { log } from 'console-log-colors';
+import { log as colorLog } from 'console-log-colors';
 import axios from 'axios';
 import { sql } from 'kysely'
 
@@ -21,26 +21,26 @@ let intervalsScheduled = false;
 let feedSubscribers: String[] = [];
 
 async function updateFeedSubscribers(agent: BskyAgent) {
-  console.log("Getting likes...");
+  log("Getting likes...");
   const feedUri = "at://did:plc:xcariuurag22domm7jgn4goj/app.bsky.feed.generator/tech-vibes";
   const likes = await agent.getLikes({
     uri: feedUri,
   }).catch((err) => {
-    console.error(err);
+    error(err);
     return null;
   });
   if (likes == null) {
     return;
   }
   feedSubscribers = likes.data.likes.map((like: any) => like.actor?.did);;
-  console.log("Number of likes: " + likes.data.likes.length);
+  log("Number of likes: " + likes.data.likes.length);
 }
 
 async function incrementMetric(metric: String, value: number = 1) {
   if (settings.publishMetrics === false) {
     return;
   }
-  console.log("Incrementing metric: " + metric + " by " + value);
+  log("Incrementing metric: " + metric + " by " + value);
   const url = 'https://metric-api.newrelic.com/metric/v1';
   const apiKey = secrets.newrelicKey;
   const data = [{
@@ -61,9 +61,9 @@ async function incrementMetric(metric: String, value: number = 1) {
           },
           httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }) // This corresponds to the -k option in curl
       });
-      // console.log('New Relic post response:', response.data);
+      // log('New Relic post response:', response.data);
   } catch (error) {
-      console.error('Error posting New Relic metric:', error);
+      error('Error posting New Relic metric:', error);
   }
 }
 
@@ -72,7 +72,7 @@ function calculateScore(uri: string, timeInHours: number, likes: number) {
   if (feedSubscribers.includes(did)) {
     // If the user has liked the feed, give the post a boost
     likes += settings.subscriberBoost;
-    console.log("Post from subscriber: " + uri);
+    log("Post from subscriber: " + uri);
   }
   // Hacker News algorithm
   return likes / Math.pow(timeInHours + 2, 2.8);
@@ -120,12 +120,12 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
       uri: row.uri,
       depth: 1,
     }).catch((err) => {
-      console.error(err);
+      error(err);
       errorStatus = err.status;
       return null;
     });
     if (post == null) {
-      // console.error("Failed to get post, deleting: " + row.uri);
+      // error("Failed to get post, deleting: " + row.uri);
       // await deletePost(ctx, row.uri);
       continue;
     }
@@ -133,7 +133,7 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
     const repostCount = (<any>post.data.thread.post)?.repostCount as number ?? 0;
     const indexedTime = row.first_indexed;
     const score = calculateScore(row.uri, (currentTime - indexedTime) / 1000 / 60 / 60, likeCount + repostCount + row.mod);
-    // console.log("Updating score for post: " + row.uri + " to " + score);
+    // log("Updating score for post: " + row.uri + " to " + score);
     await ctx.db.insertInto('post')
       .values({
         uri: row.uri,
@@ -151,16 +151,16 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
   }
   if (res.length > 0) {
     incrementMetric(REFRESH_METRIC, res.length);
-    console.log("Updated " + res.length + " score(s) at: " + new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
+    log("Updated " + res.length + " score(s) at: " + new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
   } else {
-    console.log("No scores to update at: " + new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
+    log("No scores to update at: " + new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true }));
   }
   // logPosts(ctx, agent, 10);
 }
 
 async function deleteStalePosts(ctx: AppContext) {
   // Delete all posts in the db older than 1 day with a score less than 0.1
-  log.red("Deleting stale posts...");
+  log("Deleting stale posts...");
   const currentTime = Date.now();
   // const ONE_DAY = 1000 * 60 * 60 * 24 * 1;
   // let builder = ctx.db
@@ -184,7 +184,7 @@ function uriToUrl(uri: string) {
 }
 
 async function logPosts(ctx: AppContext, agent: BskyAgent, limit: number) {
-  console.log("Logging posts for debugging...");
+  log("Logging posts for debugging...");
   let builder = ctx.db
     .selectFrom('post')
     .selectAll()
@@ -199,27 +199,35 @@ async function logPosts(ctx: AppContext, agent: BskyAgent, limit: number) {
       uri: row.uri,
       depth: 1,
     }).catch((err) => {
-      console.error(err);
+      error(err);
       return null;
     });
     const data = (<any>post?.data.thread.post);
     const author = data?.author.displayName;
     const text = data?.record.text;
     const likes = data?.likeCount;
-    console.log("--------------------------------------------------------");
-    log.green("Author: " + author);
-    log.yellow("Text: " + text);
-    log.red("Likes: " + likes);
-    log.magenta("Score: " + row.score);
-    log.cyan(uriToUrl(row.uri));
+    log("--------------------------------------------------------");
+    colorLog.green("Author: " + author);
+    colorLog.yellow("Text: " + text);
+    colorLog.red("Likes: " + likes);
+    colorLog.magenta("Score: " + row.score);
+    colorLog.cyan(uriToUrl(row.uri));
   }
+}
+
+function log(msg: string) {
+  console.log(`[Indie Dev] ${msg}`);
+}
+
+function error(msg: string) {
+  console.error(`[Indie Dev] ${msg}`);
 }
 
 export const handler = async (ctx: AppContext, params: QueryParams, agent: BskyAgent) => {
   incrementMetric(REQUEST_METRIC);
 
   if (!intervalsScheduled) {
-    log.yellow("Scheduling intervals...");
+    colorLog.yellow("Scheduling intervals...");
     // Schedule a refresh of scores every 15 minutes
     setInterval(() => {
       refreshScores(ctx, agent);
@@ -258,8 +266,8 @@ export const handler = async (ctx: AppContext, params: QueryParams, agent: BskyA
   const res = await builder.execute()
 
   // for (const row of res) {
-  //   console.log(row);
-  //   console.log(uriToUrl(row.uri));
+  //   log(row);
+  //   log(uriToUrl(row.uri));
   // }
 
   const feed = res.map((row) => ({
@@ -279,7 +287,7 @@ export const handler = async (ctx: AppContext, params: QueryParams, agent: BskyA
     cursor = last.first_indexed + "";
   }
 
-  console.log("Responding to request with " + feed.length + " posts");
+  log("Responding to request with " + feed.length + " posts");
 
   return {
     cursor,
