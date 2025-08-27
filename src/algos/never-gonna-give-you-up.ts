@@ -286,12 +286,8 @@ export const handler = async (
     }
   }
 
-  // Add pinned posts to top of feed
-  for (const post of pinnedPosts) {
-    feed.unshift({
-      post: post,
-    })
-  }
+  // Add pinned posts to the bottom of the feed
+  feed.push(...pinnedPosts.map((post: string) => ({ post })))
 
   // Slice the feed to the desired limit
   const slicedFeed = feed.slice(startingIndex, startingIndex + feedLimit)
