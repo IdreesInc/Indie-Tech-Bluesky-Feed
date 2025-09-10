@@ -12,8 +12,8 @@ const vibesAlgoSettings = {
 
 const rickRollSettings = {
   recordName: 'nggyunglyd',
-  displayName: "Rolling Hills",
-  description: "A lovely feed containing trending nature and tech content that will never let you down...",
+  displayName: "NGLYD",
+  description: "A lovely feed containing trending nature, art, and dev content that will never let you down...",
   avatar: './avatar-rick-roll.png'
 }
 

@@ -62,8 +62,8 @@ async function incrementMetric(metric: String, value: number = 1) {
           httpsAgent: new (require('https').Agent)({ rejectUnauthorized: false }) // This corresponds to the -k option in curl
       });
       // log('New Relic post response:', response.data);
-  } catch (error) {
-      error('Error posting New Relic metric:', error);
+  } catch (e) {
+      error('Error posting New Relic metric:' + e);
   }
 }
 
