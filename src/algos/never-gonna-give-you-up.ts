@@ -150,7 +150,6 @@ async function refreshScores(ctx: AppContext, agent: BskyAgent) {
 }
 
 async function deleteStalePosts(ctx: AppContext) {
-  // Delete all posts in the db older than 3 days with a score less than 0.1
   log('Deleting stale posts...')
   const currentTime = Date.now()
   // Delete all posts in the db older than 7 days
