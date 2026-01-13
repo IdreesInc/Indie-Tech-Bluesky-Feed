@@ -162,17 +162,11 @@ async function deleteStalePosts(ctx: AppContext) {
   // Delete all posts in the db older than 1 day with a score less than 0.1
   log("Deleting stale posts...");
   const currentTime = Date.now();
-  // const ONE_DAY = 1000 * 60 * 60 * 24 * 1;
-  // let builder = ctx.db
-  //   .deleteFrom('post')
-  //   .where('first_indexed', '<', currentTime - ONE_DAY)
-  //   .where('score', '<', 0.5)
-  // await builder.execute();
   // Delete all posts in the db older than 7 days
-  const FOURTEEN_DAYS = 1000 * 60 * 60 * 24 * 14;
+  const SECEN = 1000 * 60 * 60 * 24 * 7;
   let builder = ctx.db
     .deleteFrom('post')
-    .where('first_indexed', '<', currentTime - FOURTEEN_DAYS);
+    .where('first_indexed', '<', currentTime - SECEN);
   await builder.execute();
 }
 

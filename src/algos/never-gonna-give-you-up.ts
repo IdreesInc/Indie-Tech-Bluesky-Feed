@@ -153,17 +153,11 @@ async function deleteStalePosts(ctx: AppContext) {
   // Delete all posts in the db older than 3 days with a score less than 0.1
   log('Deleting stale posts...')
   const currentTime = Date.now()
-  // const THREE_DAYS = 1000 * 60 * 60 * 24 * 3
-  // let builder = ctx.db
-  //   .deleteFrom('rick_roll_post')
-  //   .where('first_indexed', '<', currentTime - THREE_DAYS)
-  //   .where('score', '<', 0.1)
-  // await builder.execute()
-  // Delete all posts in the db older than 14 days
-  const FOURTEEN_DAYS = 1000 * 60 * 60 * 24 * 14
+  // Delete all posts in the db older than 7 days
+  const SEVEN_DAYS = 1000 * 60 * 60 * 24 * 7
   let builder = ctx.db
     .deleteFrom('rick_roll_post')
-    .where('first_indexed', '<', currentTime - FOURTEEN_DAYS)
+    .where('first_indexed', '<', currentTime - SEVEN_DAYS)
   await builder.execute()
 }
 
@@ -252,8 +246,8 @@ export const handler = async (
   if (params.cursor && params.cursor.length > 0) {
     try {
       startingIndex = parseInt(params.cursor || '0')
-    } catch (error) {
-      error('Error parsing cursor:', error)
+    } catch (e) {
+      error('Error parsing cursor: ' + e)
     }
   }
 
